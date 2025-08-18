@@ -3,8 +3,12 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-st.set_page_config(page_title="Roaming Costs Aggregator", layout="wide")
-st.title("Roaming Costs Aggregator")
+st.set_page_config(
+    page_title="Roaming Costs Aggre🐊",
+    page_icon="🐊",   # You can use an emoji...
+    layout="wide"
+)
+st.title("Roaming Costs Aggre🐊")
 
 uploaded = st.file_uploader("Upload Excel (.xlsx) in the standard format", type=["xlsx"])
 redistribute_threshold = st.number_input("Redistribution threshold (ZAR)", min_value=0.0, value=10.0, step=0.5)
@@ -167,10 +171,6 @@ else:
         parts.append(spacer(cols_no_helpers))
     out_df = pd.concat(parts, ignore_index=True)[:-2] if parts else df_sorted.drop(columns=["TRANSPORTER_BASE", "VEHICLE_REG_BASE"])
 
-    # Preview reflects redistribution: rows below threshold have TOTAL set to 0, with amounts absorbed by rows above threshold in the same transporter.
-    st.subheader("Preview")
-    st.dataframe(out_df, use_container_width=True, hide_index=True)
-
     buf = io.BytesIO()
     with pd.ExcelWriter(buf, engine="openpyxl") as writer:
         out_df.to_excel(writer, index=False, sheet_name="Grouped")
@@ -188,6 +188,6 @@ else:
                         c.font = Font(bold=True)
                         c.fill = PatternFill(fill_type="solid", fgColor="DDDDDD")
 
-    st.download_button("⬇️ Download grouped Excel", buf.getvalue(),
+    st.download_button("⬇️ Download", buf.getvalue(),
                        file_name="grouped_by_transporter.xlsx",
                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
