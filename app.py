@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 st.set_page_config(page_title="Roaming Costs Aggregator", layout="wide")
-st.title("ARoaming Costs Aggregator")
+st.title("Roaming Costs Aggregator")
 
 uploaded = st.file_uploader("Upload Excel (.xlsx) in the standard format", type=["xlsx"])
 redistribute_threshold = st.number_input("Redistribution threshold (ZAR)", min_value=0.0, value=10.0, step=0.5)
@@ -121,8 +121,10 @@ else:
         df.groupby(["TRANSPORTER_BASE", "VEHICLE_REG_BASE"], as_index=False)
           .agg({"MSISDN": "size", **{c: "sum" for c in NUMERIC_COLS}})
     )
-    # Ensure MSISDN is integer count for display
-    grouped_df["MSISDN"] = grouped_df["MSISDN"].astype(int)
+    # Rename MSISDN to ROWS_COMBINED
+    grouped_df = grouped_df.rename(columns={"MSISDN": "ROWS_COMBINED"})
+    # Ensure ROWS_COMBINED is integer count for display
+    grouped_df["ROWS_COMBINED"] = grouped_df["ROWS_COMBINED"].astype(int)
 
     # Set display columns from base keys
     grouped_df["TRANSPORTER"] = grouped_df["TRANSPORTER_BASE"]
@@ -143,7 +145,7 @@ else:
         grouped_df["TOTAL_REDIST"] = grouped_df["TOTAL"]
 
     # Reorder columns to the expected schema and keep helper keys for sorting only
-    cols_order = ["MSISDN", "TRANSPORTER", "VEHICLE REG", "CALLS ROAMING", "CALLS DATA", "TOTAL EXCL VAT", "TOTAL", "TOTAL_REDIST", "TRANSPORTER_BASE", "VEHICLE_REG_BASE"]
+    cols_order = ["ROWS_COMBINED", "TRANSPORTER", "VEHICLE REG", "CALLS ROAMING", "CALLS DATA", "TOTAL EXCL VAT", "TOTAL", "TOTAL_REDIST", "TRANSPORTER_BASE", "VEHICLE_REG_BASE"]
     df_display = grouped_df[cols_order]
 
     # Sort aggregated rows and insert double-blank spacer between base transporters
@@ -158,7 +160,7 @@ else:
         subtotal = pd.Series(index=cols_no_helpers, dtype="object")
         subtotal["TRANSPORTER"] = f"{g_no_helpers['TRANSPORTER'].iloc[0]} — SUBTOTAL"
         subtotal["VEHICLE REG"] = "— SUBTOTAL —"
-        for c in ["MSISDN", "CALLS ROAMING", "CALLS DATA", "TOTAL EXCL VAT", "TOTAL", "TOTAL_REDIST"]:
+        for c in ["ROWS_COMBINED", "CALLS ROAMING", "CALLS DATA", "TOTAL EXCL VAT", "TOTAL", "TOTAL_REDIST"]:
             if c in g_no_helpers.columns:
                 subtotal[c] = float(g_no_helpers[c].fillna(0).sum())
         parts.append(pd.DataFrame([subtotal], columns=cols_no_helpers))
