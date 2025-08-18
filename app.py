@@ -115,17 +115,14 @@ else:
           .str.replace(r"\s+", " ", regex=True)
     )
 
-    # Aggregate to per-vehicle costs within each base transporter
-    agg_map = {c: "sum" for c in NUMERIC_COLS}
-    # Concatenate unique MSISDNs for traceability
-    def _concat_msisdn(s):
-        vals = [str(x) for x in s if pd.notna(x) and str(x) != ""]
-        return ", ".join(sorted(set(vals))) if vals else None
-
+    # MSISDN column now stores the count of source rows merged into each VEHICLE REG within a transporter
+    # Replace MSISDN values with a compact count of rows combined per vehicle
     grouped_df = (
         df.groupby(["TRANSPORTER_BASE", "VEHICLE_REG_BASE"], as_index=False)
-          .agg({"MSISDN": _concat_msisdn, **agg_map})
+          .agg({"MSISDN": "size", **{c: "sum" for c in NUMERIC_COLS}})
     )
+    # Ensure MSISDN is integer count for display
+    grouped_df["MSISDN"] = grouped_df["MSISDN"].astype(int)
 
     # Set display columns from base keys
     grouped_df["TRANSPORTER"] = grouped_df["TRANSPORTER_BASE"]
@@ -161,7 +158,7 @@ else:
         subtotal = pd.Series(index=cols_no_helpers, dtype="object")
         subtotal["TRANSPORTER"] = f"{g_no_helpers['TRANSPORTER'].iloc[0]} — SUBTOTAL"
         subtotal["VEHICLE REG"] = "— SUBTOTAL —"
-        for c in ["CALLS ROAMING", "CALLS DATA", "TOTAL EXCL VAT", "TOTAL", "TOTAL_REDIST"]:
+        for c in ["MSISDN", "CALLS ROAMING", "CALLS DATA", "TOTAL EXCL VAT", "TOTAL", "TOTAL_REDIST"]:
             if c in g_no_helpers.columns:
                 subtotal[c] = float(g_no_helpers[c].fillna(0).sum())
         parts.append(pd.DataFrame([subtotal], columns=cols_no_helpers))
