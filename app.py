@@ -2,12 +2,26 @@ import io
 import numpy as np
 import pandas as pd
 import streamlit as st
+from pathlib import Path
 
 st.set_page_config(
     page_title="Roaming Costs Aggre🐊",
-    page_icon="🐊",   # You can use an emoji...
+    page_icon="gator_icon.ico",   # You can use an emoji...
     layout="wide"
 )
+# Auto-show a sidebar logo if any of these assets are present locally
+for _p in [
+    "assets/gator_logo_512.png",
+    "assets/gator_icon_512x512.png",
+    "assets/gator_icon_256x256.png",
+    "gator_icon_512x512.png",
+    "gator_icon_256x256.png",
+    "assets/gator_favicon_256.png",
+    "gator_icon.png",
+]:
+    if Path(_p).exists():
+        st.sidebar.image(_p, use_container_width=True)
+        break
 st.title("Roaming Costs Aggre🐊")
 
 uploaded = st.file_uploader("Upload Excel (.xlsx) in the standard format", type=["xlsx"])
@@ -81,7 +95,7 @@ def redistribute_within_transporter(df_in: pd.DataFrame, threshold_zar: float) -
     return df
 
 if uploaded is None:
-    st.info("Headers must be on row 6; exact columns in the standard order.")
+    pass
 else:
     # Load Excel file with headers on row 6 (index 5) and validate expected columns are present.
     try:
