@@ -167,7 +167,7 @@ else:
     df_display = grouped_df[cols_order]
 
     # Sort aggregated rows and insert double-blank spacer between base transporters
-    df_sorted = df_display.sort_values(["TRANSPORTER_BASE", "VEHICLE_REG_BASE"], kind="stable").reset_index(drop=True)
+    df_sorted = df_display.sort_values(["TRANSPORTER_BASE", "TOTAL_REDIST", "VEHICLE_REG_BASE"], kind="stable", ascending=[True, True, True]).reset_index(drop=True)
 
     parts = []
     for _, g in df_sorted.groupby("TRANSPORTER_BASE", sort=False):
@@ -202,6 +202,8 @@ else:
                         c.font = Font(bold=True)
                         c.fill = PatternFill(fill_type="solid", fgColor="DDDDDD")
 
+    # Derive output name from original upload
+    out_filename = f"{Path(uploaded.name).stem}_processed.xlsx"
     st.download_button("⬇️ Download", buf.getvalue(),
-                       file_name="grouped_by_transporter.xlsx",
+                       file_name=out_filename,
                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
