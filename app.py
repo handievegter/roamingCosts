@@ -28,8 +28,17 @@ uploaded = st.file_uploader("Upload Excel (.xlsx) in the standard format", type=
 redistribute_threshold = st.number_input("Redistribution threshold (ZAR)", min_value=0.0, value=10.0, step=0.5)
 
 EXPECTED_COLUMNS = ["MSISDN","TRANSPORTER","VEHICLE REG","CALLS ROAMING","CALLS DATA","TOTAL EXCL VAT","TOTAL"]
-HEADER_ROW_INDEX = 5
 NUMERIC_COLS = ["CALLS ROAMING","CALLS DATA","TOTAL EXCL VAT","TOTAL"]
+
+# Scan the first rows to locate the header row. Layout changed: was row 6, newer files put it on row 3.
+def detect_header_row(file, expected, max_scan=15) -> int:
+    probe = pd.read_excel(file, header=None, nrows=max_scan, dtype=object)
+    needed = {c.strip().upper() for c in expected}
+    for i in range(len(probe)):
+        cells = {str(v).strip().upper() for v in probe.iloc[i].tolist() if pd.notna(v)}
+        if needed.issubset(cells):
+            return i
+    raise ValueError(f"Could not find a header row containing {expected} in the first {max_scan} rows.")
 
 # This function handles columns that might have numbers stored as strings with spaces and commas.
 # It coerces such mixed-type columns into proper numeric types, replacing common formatting issues.
@@ -97,9 +106,11 @@ def redistribute_within_transporter(df_in: pd.DataFrame, threshold_zar: float) -
 if uploaded is None:
     pass
 else:
-    # Load Excel file with headers on row 6 (index 5) and validate expected columns are present.
+    # Auto-detect the header row, then load with expected columns.
     try:
-        df = pd.read_excel(uploaded, header=HEADER_ROW_INDEX, dtype={"MSISDN": str})
+        header_row = detect_header_row(uploaded, EXPECTED_COLUMNS)
+        uploaded.seek(0)
+        df = pd.read_excel(uploaded, header=header_row, dtype={"MSISDN": str})
     except Exception as e:
         st.error(f"Could not read Excel: {e}")
         st.stop()
